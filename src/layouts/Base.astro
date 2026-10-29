@@ -1,0 +1,96 @@
+---
+import '../styles/global.css';
+import Header from '../components/layout/Header.astro';
+import Footer from '../components/layout/Footer.astro';
+import { getLangFromUrl, t } from '../i18n/index';
+
+interface Props {
+  title?: string;
+  description?: string;
+  lang?: string;
+}
+
+const { title, description, lang: langProp } = Astro.props;
+const lang = langProp ?? getLangFromUrl(Astro.url);
+const tr = t(lang);
+
+const siteName = 'Antonio Serrano Herruzo';
+const pageTitle = title ? `${title} — ${siteName}` : `${siteName} · AI Engineer`;
+const pageDesc = description ?? tr.hero.tagline;
+const canonicalES = new URL('/', Astro.site).href;
+const canonicalEN = new URL('/en/', Astro.site).href;
+const ogImage = new URL('/og-image.svg', Astro.site).href;
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={pageDesc} />
+    <meta name="theme-color" content="#080c10" />
+    <meta name="generator" content={Astro.generator} />
+
+    <!-- Canonical + hreflang -->
+    <link rel="canonical" href={lang === 'en' ? canonicalEN : canonicalES} />
+    <link rel="alternate" hreflang="es" href={canonicalES} />
+    <link rel="alternate" hreflang="en" href={canonicalEN} />
+    <link rel="alternate" hreflang="x-default" href={canonicalES} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={pageDesc} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={lang === 'en' ? canonicalEN : canonicalES} />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <!-- Favicon + PWA -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+
+    <title>{pageTitle}</title>
+
+    <!-- Anti-FOUC: apply saved theme before first paint -->
+    <script is:inline>
+      try {
+        if (localStorage.getItem('theme') === 'light') {
+          document.documentElement.setAttribute('data-theme', 'light');
+        }
+      } catch(e) {}
+    </script>
+
+    <!-- Fonts via bunny fonts (privacy-friendly CDN) -->
+    <link rel="preconnect" href="https://fonts.bunny.net" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.bunny.net/css?family=geist:400,500,600,700,800,900&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.bunny.net/css?family=geist-mono:400,500&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.bunny.net/css?family=cabinet-grotesk:400,500,700,800,900&display=swap"
+    />
+  </head>
+  <body>
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[10001] focus:px-4 focus:py-2 focus:rounded-full focus:bg-[var(--color-accent)] focus:text-black focus:font-semibold">
+      Saltar al contenido
+    </a>
+    <Header lang={lang} />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer lang={lang} />
+    <div id="scroll-progress" style="position:fixed;top:0;left:0;height:2px;width:0%;background:#8b9fff;z-index:9999;transition:width 0.1s;pointer-events:none;box-shadow:0 0 8px rgba(139,159,255,0.4);"></div>
+    <script>
+      window.addEventListener('scroll', () => {
+        const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+        const el = document.getElementById('scroll-progress');
+        if (el) el.style.width = pct + '%';
+      }, { passive: true });
+    </script>
+  </body>
+</html>

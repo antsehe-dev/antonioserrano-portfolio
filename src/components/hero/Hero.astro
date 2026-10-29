@@ -1,0 +1,178 @@
+---
+import { t } from '../../i18n/index';
+interface Props { lang: string; }
+const { lang } = Astro.props;
+const tr = t(lang);
+const nameWords = tr.hero.name.split(' ');
+const roleWords = tr.hero.role.split(' ');
+---
+
+<section
+  id="hero"
+  data-lang={lang}
+  class="relative min-h-screen flex flex-col justify-end px-6 pb-20 md:pb-28 overflow-hidden"
+>
+  <!-- WebGL canvas -->
+  <canvas id="neural-canvas" class="absolute inset-0 w-full h-full opacity-60" aria-hidden="true"></canvas>
+
+  <!-- Ambient color glow -->
+  <div class="absolute pointer-events-none" aria-hidden="true" style="top:20%;left:10%;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(139,159,255,0.07) 0%,transparent 70%);filter:blur(60px);"></div>
+  <div class="absolute pointer-events-none" aria-hidden="true" style="bottom:10%;right:5%;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,rgba(100,120,255,0.05) 0%,transparent 70%);filter:blur(40px);"></div>
+
+  <!-- Ghost depth element -->
+  <div
+    class="absolute select-none pointer-events-none overflow-hidden"
+    aria-hidden="true"
+    style="bottom:-0.1em;right:-0.02em;font-size:clamp(9rem,28vw,22rem);font-weight:900;letter-spacing:-0.07em;color:transparent;-webkit-text-stroke:1px rgba(139,159,255,0.05);line-height:1;"
+  >ASH</div>
+
+  <!-- Vignette — fades to bg color -->
+  <div
+    class="absolute inset-0 pointer-events-none hero-vignette"
+    aria-hidden="true"
+  ></div>
+
+  <div class="relative z-10 max-w-6xl w-full mx-auto">
+    <!-- Location + status -->
+    <div id="hero-meta" class="flex items-center gap-4 mb-8 md:mb-12" style="opacity:0;">
+      <span class="font-mono text-xs" style="color:var(--color-dim);">
+        {tr.hero.location}
+      </span>
+      <span class="font-mono text-xs" style="color:var(--color-faint);">—</span>
+      <span class="flex items-center gap-1.5 font-mono text-xs" style="color:var(--color-dim);">
+        <span class="w-1.5 h-1.5 rounded-full inline-block" style="background:#8b9fff;box-shadow:0 0 6px rgba(139,159,255,0.7);"></span>
+        {lang === 'en' ? 'Available for work' : 'Disponible'}
+      </span>
+    </div>
+
+    <!-- Name — editorial massive -->
+    <h1
+      id="hero-name"
+      class="font-black leading-none mb-6 md:mb-8"
+      style="font-size:clamp(3.5rem,10vw,9rem);letter-spacing:-0.04em;color:var(--color-heading);"
+      aria-label={tr.hero.name}
+    >
+      {nameWords.map((word, i) => (
+        <span
+          class="hero-word"
+          style={`opacity:0;display:inline-block;${i < nameWords.length - 1 ? 'margin-right:0.2em;' : ''}`}
+        >
+          {word}
+        </span>
+      ))}
+    </h1>
+
+    <!-- Role + tagline row -->
+    <div id="hero-bottom" class="flex flex-col md:flex-row md:items-end md:justify-between gap-6" style="opacity:0;">
+      <div>
+        <p
+          class="font-mono text-sm md:text-base mb-2"
+          style="color:#8b9fff;letter-spacing:0.05em;"
+          aria-label={tr.hero.role}
+        >
+          {roleWords.map((word, i) => (
+            <span class="hero-role-word" style="display:inline-block;">
+              {word}{i < roleWords.length - 1 ? '\u00a0' : ''}
+            </span>
+          ))}
+        </p>
+        <p
+          class="text-sm md:text-base max-w-sm leading-relaxed"
+          style="color:var(--color-dim);"
+        >
+          {tr.hero.tagline}
+        </p>
+      </div>
+
+      <!-- CTAs as text links -->
+      <nav class="flex flex-col sm:flex-row gap-4 md:gap-6 shrink-0" aria-label="Hero navigation">
+        <a
+          href="#projects"
+          class="group flex items-center gap-2 font-mono text-sm transition-colors"
+          style="color:var(--color-muted);"
+        >
+          <span class="group-hover:text-[var(--color-heading)] transition-colors">{tr.hero.cta_projects}</span>
+          <span class="group-hover:translate-x-1 transition-transform inline-block" aria-hidden="true">↓</span>
+        </a>
+        <a
+          href="#contact"
+          class="group flex items-center gap-2 font-mono text-sm transition-colors"
+          style="color:var(--color-muted);"
+        >
+          <span class="group-hover:text-[var(--color-heading)] transition-colors">{tr.hero.cta_contact}</span>
+          <span class="group-hover:translate-x-1 transition-transform inline-block" aria-hidden="true">→</span>
+        </a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Scroll indicator — minimal line -->
+  <div id="hero-scroll" class="absolute bottom-8 left-6 md:left-auto md:right-6 flex flex-col items-center gap-2" style="opacity:0;" aria-hidden="true">
+    <span class="font-mono text-xs" style="color:var(--color-faint);">scroll</span>
+    <div style="width:1px;height:40px;background:linear-gradient(to bottom, var(--color-dimmer), transparent);"></div>
+  </div>
+</section>
+
+<style>
+  .hero-vignette {
+    background: radial-gradient(ellipse at 50% 60%, transparent 20%, var(--color-bg) 75%);
+  }
+</style>
+
+<script>
+import { initNeuralCanvas } from './neural-canvas';
+import { gsap } from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
+
+if ('requestIdleCallback' in window) {
+  requestIdleCallback(() => initNeuralCanvas(), { timeout: 2000 });
+} else {
+  setTimeout(() => initNeuralCanvas(), 200);
+}
+
+const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+if (!reduced) {
+  gsap.set('.hero-word', { opacity: 0, y: 60, filter: 'blur(4px)' });
+  gsap.set(['#hero-meta', '#hero-bottom', '#hero-scroll'], { opacity: 0, y: 20 });
+
+  const tl = gsap.timeline({ delay: 1.2 });
+
+  tl.to('.hero-word', {
+    opacity: 1,
+    y: 0,
+    filter: 'blur(0px)',
+    stagger: 0.08,
+    duration: 1,
+    ease: 'power4.out',
+  }, 0);
+
+  tl.to(['#hero-meta', '#hero-bottom', '#hero-scroll'], {
+    opacity: 1,
+    y: 0,
+    stagger: 0.1,
+    duration: 0.7,
+    ease: 'power3.out',
+  }, 0.5);
+
+  // Subtle parallax on name
+  gsap.to('#hero-name', {
+    y: -80,
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '#hero',
+      start: 'top top',
+      end: 'bottom top',
+      scrub: true,
+    },
+  });
+} else {
+  document.querySelectorAll<HTMLElement>('.hero-word').forEach(el => { el.style.opacity = '1'; });
+  ['#hero-meta','#hero-bottom','#hero-scroll'].forEach(sel => {
+    const el = document.querySelector<HTMLElement>(sel);
+    if (el) el.style.opacity = '1';
+  });
+}
+</script>

@@ -1,0 +1,130 @@
+---
+import { t } from '../../i18n/index';
+import { stackCategories, marqueeItems } from '../../data/stack';
+
+interface Props { lang: string; }
+const { lang } = Astro.props;
+const tr = t(lang);
+
+---
+
+<section id="stack" class="px-6 max-w-5xl mx-auto">
+  <div class="flex items-center gap-4 mb-16">
+    <span class="font-mono text-xs tracking-widest" style="color:var(--color-accent);">03</span>
+    <div class="flex-1" style="height:1px;background:linear-gradient(90deg,rgba(139,159,255,0.4),var(--color-border));"></div>
+    <span class="font-mono text-xs tracking-widest uppercase" style="color:var(--color-dim);">Stack</span>
+  </div>
+
+  <h2 class="stack-title text-4xl md:text-7xl font-black mb-12" style="letter-spacing:-0.04em;color:var(--color-heading);text-shadow:0 0 80px rgba(139,159,255,0.3);" aria-label={tr.stack.title}>
+    {tr.stack.title.split(' ').map((word, wi, arr) => [
+      <span style="display:inline-block;white-space:nowrap;">
+        {word.split('').map((ch) => (
+          <span class="stack-char" style="display:inline-block;overflow:hidden;">
+            <span class="stack-char-inner" style="display:inline-block;">{ch}</span>
+          </span>
+        ))}
+      </span>,
+      wi < arr.length - 1 ? ' ' : ''
+    ])}
+  </h2>
+
+  <!-- Categories grid with clip-path reveal -->
+  <div class="grid sm:grid-cols-2 gap-6 mb-16">
+    {stackCategories.map((cat, catI) => (
+      <div class="stack-cat glass rounded-xl p-6" style="clip-path:inset(0 100% 0 0);" data-cat={catI}>
+        <h3 class="text-xs font-semibold uppercase tracking-widest text-[var(--color-muted)] mb-4">
+          {lang === 'en' ? cat.label_en : cat.label}
+        </h3>
+        <div class="flex flex-wrap gap-2">
+          {cat.items.map((item, i) => (
+            <span
+              class="stack-pill text-sm px-3 py-1 rounded-full border"
+              style={`opacity:0; border-color: rgba(139,159,255,${0.3 - i * 0.03}); color: rgba(184,191,204,${1 - i * 0.06})`}
+            >
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Marquee with edge fades -->
+  <div class="marquee-track overflow-hidden relative" aria-hidden="true" style="mask-image:linear-gradient(90deg,transparent 0%,black 8%,black 92%,transparent 100%);-webkit-mask-image:linear-gradient(90deg,transparent 0%,black 8%,black 92%,transparent 100%);">
+    <div class="marquee-inner flex gap-8 w-max">
+      {[...marqueeItems, ...marqueeItems].map((item) => (
+        <span class="text-sm font-medium whitespace-nowrap px-4 py-2 border border-[var(--color-border)] rounded-full" style="color:#6b7280;">
+          {item}
+        </span>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!reduced) {
+    // Title chars reveal
+    gsap.from('.stack-char-inner', {
+      y: '110%',
+      stagger: 0.03,
+      duration: 0.6,
+      ease: 'power3.out',
+      scrollTrigger: { trigger: '.stack-title', start: 'top 85%' },
+    });
+
+    // Category cards: clip-path reveal
+    gsap.utils.toArray<HTMLElement>('.stack-cat').forEach((el, i) => {
+      gsap.to(el, {
+        clipPath: 'inset(0 0% 0 0)',
+        duration: 0.7,
+        delay: i * 0.1,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: 'top 85%' },
+      });
+
+      // Skill pills: bounce in after card reveals
+      const pills = el.querySelectorAll<HTMLElement>('.stack-pill');
+      gsap.fromTo(pills,
+        { opacity: 0, y: 20 },
+        {
+          opacity: 1,
+          y: 0,
+          stagger: 0.05,
+          duration: 0.5,
+          delay: i * 0.1 + 0.4,
+          ease: 'elastic.out(1, 0.5)',
+          scrollTrigger: { trigger: el, start: 'top 85%' },
+        }
+      );
+    });
+  } else {
+    document.querySelectorAll<HTMLElement>('.stack-cat').forEach((el) => {
+      el.style.clipPath = 'inset(0 0% 0 0)';
+    });
+    document.querySelectorAll<HTMLElement>('.stack-pill').forEach((el) => {
+      el.style.opacity = '1';
+    });
+  }
+</script>
+
+<style>
+  .marquee-inner {
+    animation: marquee 14s linear infinite;
+  }
+  .marquee-track:hover .marquee-inner {
+    animation-play-state: paused;
+  }
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .marquee-inner { animation: none; }
+  }
+</style>

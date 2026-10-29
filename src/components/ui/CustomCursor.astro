@@ -1,0 +1,92 @@
+---
+---
+<div id="cursor-dot" class="fixed pointer-events-none z-[9999] w-1.5 h-1.5 rounded-full bg-white" style="transform: translate(-50%,-50%); top:0; left:0;"></div>
+<div id="cursor-ring" class="fixed pointer-events-none z-[9998] w-10 h-10 rounded-full border border-white/60" style="transform: translate(-50%,-50%); top:0; left:0; transition: width 0.3s, height 0.3s, background 0.3s, border-radius 0.3s, opacity 0.3s;"></div>
+
+<script>
+  const dot = document.getElementById('cursor-dot') as HTMLElement;
+  const ring = document.getElementById('cursor-ring') as HTMLElement;
+
+  let mx = 0, my = 0; // mouse
+  let rx = 0, ry = 0; // ring current
+  const LERP = 0.12;
+
+  window.addEventListener('mousemove', (e) => {
+    mx = e.clientX;
+    my = e.clientY;
+    dot.style.left = mx + 'px';
+    dot.style.top = my + 'px';
+  });
+
+  function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
+
+  function tick() {
+    rx = lerp(rx, mx, LERP);
+    ry = lerp(ry, my, LERP);
+    ring.style.left = rx + 'px';
+    ring.style.top = ry + 'px';
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  // Hover states
+  const hoverSelectors = 'a, button, [role=button]';
+
+  function onEnterClickable() {
+    ring.style.width = '64px';
+    ring.style.height = '64px';
+    ring.style.background = 'white';
+    ring.style.border = 'none';
+    ring.style.mixBlendMode = 'difference';
+  }
+  function onLeaveClickable() {
+    ring.style.width = '40px';
+    ring.style.height = '40px';
+    ring.style.background = '';
+    ring.style.border = '1px solid rgba(255,255,255,0.6)';
+    ring.style.mixBlendMode = '';
+  }
+  function onEnterText() {
+    ring.style.width = '80px';
+    ring.style.height = '4px';
+    ring.style.borderRadius = '2px';
+    ring.style.background = 'rgba(255,255,255,0.4)';
+    ring.style.border = 'none';
+  }
+  function onLeaveText() {
+    ring.style.width = '40px';
+    ring.style.height = '40px';
+    ring.style.borderRadius = '50%';
+    ring.style.background = '';
+    ring.style.border = '1px solid rgba(255,255,255,0.6)';
+  }
+
+  document.querySelectorAll<HTMLElement>(hoverSelectors).forEach((el) => {
+    el.addEventListener('mouseenter', onEnterClickable);
+    el.addEventListener('mouseleave', onLeaveClickable);
+  });
+
+  // Text nodes — p, h1-h6, span, li
+  document.querySelectorAll<HTMLElement>('p, h1, h2, h3, h4, h5, h6, li').forEach((el) => {
+    el.addEventListener('mouseenter', onEnterText);
+    el.addEventListener('mouseleave', onLeaveText);
+  });
+
+  // Hide when cursor leaves window
+  document.addEventListener('mouseleave', () => {
+    dot.style.opacity = '0';
+    ring.style.opacity = '0';
+  });
+  document.addEventListener('mouseenter', () => {
+    dot.style.opacity = '1';
+    ring.style.opacity = '1';
+  });
+</script>
+
+<style>
+  body { cursor: none; }
+  @media (prefers-reduced-motion: reduce) {
+    body { cursor: auto; }
+    #cursor-dot, #cursor-ring { display: none; }
+  }
+</style>

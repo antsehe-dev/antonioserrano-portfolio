@@ -1,0 +1,87 @@
+---
+---
+<div id="loading-screen" style="position:fixed;inset:0;z-index:10000;background:#080808;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;">
+  <div style="text-align:center;user-select:none;">
+    <div id="loading-name" style="font-family:'Geist',sans-serif;font-size:clamp(3rem,10vw,7rem);font-weight:900;letter-spacing:-0.04em;color:#f0f0f0;line-height:1;margin-bottom:2rem;">ASH.</div>
+    <div id="loading-pct" style="font-family:'Geist Mono',monospace;font-size:1rem;color:#6b7280;letter-spacing:0.1em;">0%</div>
+  </div>
+  <!-- Progress bar -->
+  <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:rgba(255,255,255,0.05);">
+    <div id="loading-bar" style="height:100%;width:0%;background:linear-gradient(90deg,#a78bfa,#38bdf8);transition:width 0.05s linear;"></div>
+  </div>
+</div>
+
+<script>
+  const screen = document.getElementById('loading-screen') as HTMLElement;
+  const pctEl = document.getElementById('loading-pct') as HTMLElement;
+  const barEl = document.getElementById('loading-bar') as HTMLElement;
+  const nameEl = document.getElementById('loading-name') as HTMLElement;
+
+  // Scramble chars
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%&';
+  const target = 'ASH.';
+  let frame = 0;
+  let resolved = [false, false, false, false];
+
+  function scramble() {
+    let out = '';
+    for (let i = 0; i < target.length; i++) {
+      if (resolved[i]) {
+        out += target[i];
+      } else {
+        out += chars[Math.floor(Math.random() * chars.length)];
+      }
+    }
+    nameEl.textContent = out;
+  }
+
+  let pct = 0;
+  const startTime = performance.now();
+  const duration = 1800; // ms to reach 100
+
+  function tick() {
+    const elapsed = performance.now() - startTime;
+    pct = Math.min(100, Math.round((elapsed / duration) * 100));
+    pctEl.textContent = pct + '%';
+    barEl.style.width = pct + '%';
+
+    // Resolve letters progressively
+    resolved[0] = pct > 20;
+    resolved[1] = pct > 50;
+    resolved[2] = pct > 75;
+    resolved[3] = pct > 90;
+    scramble();
+
+    if (pct < 100) {
+      requestAnimationFrame(tick);
+    }
+  }
+  requestAnimationFrame(tick);
+
+  function exit() {
+    // Extra drama delay
+    setTimeout(() => {
+      screen.style.transition = 'transform 0.8s cubic-bezier(0.76,0,0.24,1)';
+      screen.style.transform = 'translateY(-100%)';
+      document.body.style.overflow = '';
+      setTimeout(() => { screen.remove(); }, 850);
+    }, 300);
+  }
+
+  // Block scroll during load
+  document.body.style.overflow = 'hidden';
+
+  // Wait for DOM + at least duration
+  let domReady = false;
+  let timerDone = false;
+
+  function tryExit() {
+    if (domReady && timerDone) exit();
+  }
+
+  document.addEventListener('DOMContentLoaded', () => { domReady = true; tryExit(); });
+  // In case DOMContentLoaded already fired (Astro)
+  if (document.readyState !== 'loading') { domReady = true; }
+
+  setTimeout(() => { timerDone = true; tryExit(); }, duration + 400);
+</script>

@@ -1,0 +1,227 @@
+---
+import { t, getRouteForLang } from '../../i18n/index';
+
+interface Props { lang: string; }
+const { lang } = Astro.props;
+const tr = t(lang);
+const targetLang = lang === 'es' ? 'en' : 'es';
+const langHref = getRouteForLang(targetLang, Astro.url.pathname);
+
+const navLinks = [
+  { href: '#about', label: tr.nav.about },
+  { href: '#projects', label: tr.nav.projects },
+  { href: '#stack', label: tr.nav.stack },
+  { href: '#contact', label: tr.nav.contact },
+];
+---
+
+<header
+  id="site-header"
+  class="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-6 py-4 transition-all duration-300"
+>
+  <!-- Logo -->
+  <a
+    href={lang === 'en' ? '/en/' : '/'}
+    class="font-mono text-sm tracking-wider transition-colors"
+    style="color:var(--color-dim);"
+    onmouseenter="this.style.color='var(--color-text)'"
+    onmouseleave="this.style.color='var(--color-dim)'"
+  >
+    ash<span style="color:#8b9fff;">.</span>
+  </a>
+
+  <!-- Desktop nav -->
+  <nav class="hidden md:flex items-center gap-8" aria-label="Main navigation">
+    {navLinks.map(({ href, label }) => (
+      <a
+        href={href}
+        class="nav-link font-mono text-xs tracking-wider transition-colors"
+        style="color:var(--color-dim);"
+        onmouseenter="this.style.color='var(--color-text)'"
+        onmouseleave="this.style.color='var(--color-dim)'"
+      >{label}</a>
+    ))}
+  </nav>
+
+  <!-- Right: theme toggle + lang + dropdown -->
+  <div class="flex items-center gap-4">
+    <!-- Theme toggle -->
+    <button
+      id="theme-toggle"
+      class="font-mono text-xs tracking-widest transition-colors"
+      style="color:var(--color-dim);"
+      aria-label="Toggle light/dark mode"
+    >
+      <span id="theme-icon">○</span>
+    </button>
+
+    <a
+      href={langHref}
+      class="font-mono text-xs tracking-widest transition-colors"
+      style="color:var(--color-dim);"
+      onmouseenter="this.style.color='var(--color-accent)'"
+      onmouseleave="this.style.color='var(--color-dim)'"
+      aria-label={`Switch to ${targetLang === 'en' ? 'English' : 'Español'}`}
+    >
+      {tr.nav.lang}
+    </a>
+
+    <!-- Dropdown trigger (visible on mobile, optional on desktop) -->
+    <button
+      id="nav-toggle"
+      class="md:hidden flex items-center gap-1.5 font-mono text-xs tracking-widest transition-colors"
+      style="color:var(--color-dim);"
+      aria-expanded="false"
+      aria-controls="nav-dropdown"
+      aria-label="Navigation menu"
+    >
+      <span id="nav-toggle-label">menu</span>
+      <span id="nav-toggle-icon" style="display:inline-block;transition:transform 0.2s;">↓</span>
+    </button>
+  </div>
+</header>
+
+<!-- Dropdown panel -->
+<div
+  id="nav-dropdown"
+  class="fixed top-[57px] left-0 right-0 z-40 px-6 py-6 border-b"
+  style="background:rgba(8,12,16,0.97);backdrop-filter:blur(20px);border-color:rgba(255,255,255,0.05);transform:translateY(-8px);opacity:0;pointer-events:none;transition:transform 0.25s ease, opacity 0.25s ease;"
+  role="navigation"
+  aria-label="Section navigation"
+>
+  <nav class="flex flex-col gap-5">
+    {navLinks.map(({ href, label }, i) => (
+      <a
+        href={href}
+        class="dropdown-link flex items-center justify-between group"
+        data-index={i}
+      >
+        <span class="font-mono text-xs uppercase tracking-widest transition-colors duration-150" style="color:#3d4456;">
+          {String(i + 1).padStart(2, '0')}
+        </span>
+        <span class="text-lg font-black transition-colors duration-150" style="color:#cdd2dc;letter-spacing:-0.03em;">
+          {label}
+        </span>
+        <span class="font-mono text-xs transition-colors duration-150" style="color:#2a3550;">↗</span>
+      </a>
+    ))}
+
+    <div class="pt-4 border-t" style="border-color:#151d28;">
+      <a
+        href={langHref}
+        class="font-mono text-xs uppercase tracking-widest transition-colors duration-150"
+        style="color:#2a3550;"
+        onmouseenter="this.style.color='#8b9fff'"
+        onmouseleave="this.style.color='#2a3550'"
+      >
+        {targetLang === 'en' ? 'English' : 'Español'} ↗
+      </a>
+    </div>
+  </nav>
+</div>
+
+<style>
+  .dropdown-link:hover > span:nth-child(2) { color: #8b9fff !important; }
+  .dropdown-link:hover > span:last-child { color: #8b9fff !important; }
+  .nav-link.active { color: #4a5268 !important; }
+</style>
+
+<script>
+  // Theme toggle
+  const themeToggle = document.getElementById('theme-toggle') as HTMLButtonElement | null;
+  const themeIcon = document.getElementById('theme-icon');
+
+  function applyTheme(light: boolean) {
+    if (light) {
+      document.documentElement.setAttribute('data-theme', 'light');
+      if (themeIcon) themeIcon.textContent = '●';
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if (themeIcon) themeIcon.textContent = '○';
+    }
+    try { localStorage.setItem('theme', light ? 'light' : 'dark'); } catch {}
+  }
+
+  // Init icon from current state
+  const isLight = document.documentElement.getAttribute('data-theme') === 'light';
+  if (themeIcon) themeIcon.textContent = isLight ? '●' : '○';
+
+  themeToggle?.addEventListener('click', () => {
+    const currentlyLight = document.documentElement.getAttribute('data-theme') === 'light';
+    applyTheme(!currentlyLight);
+  });
+
+  const toggle = document.getElementById('nav-toggle') as HTMLButtonElement | null;
+  const dropdown = document.getElementById('nav-dropdown') as HTMLDivElement | null;
+  const toggleIcon = document.getElementById('nav-toggle-icon');
+  let open = false;
+
+  function openDropdown() {
+    if (!dropdown || !toggle) return;
+    open = true;
+    dropdown.style.transform = 'translateY(0)';
+    dropdown.style.opacity = '1';
+    dropdown.style.pointerEvents = 'auto';
+    toggle.setAttribute('aria-expanded', 'true');
+    if (toggleIcon) toggleIcon.style.transform = 'rotate(180deg)';
+  }
+
+  function closeDropdown() {
+    if (!dropdown || !toggle) return;
+    open = false;
+    dropdown.style.transform = 'translateY(-8px)';
+    dropdown.style.opacity = '0';
+    dropdown.style.pointerEvents = 'none';
+    toggle.setAttribute('aria-expanded', 'false');
+    if (toggleIcon) toggleIcon.style.transform = 'rotate(0deg)';
+  }
+
+  toggle?.addEventListener('click', () => open ? closeDropdown() : openDropdown());
+
+  // Close on link click
+  dropdown?.querySelectorAll('a[href^="#"]').forEach(a => a.addEventListener('click', closeDropdown));
+
+  // Close on outside click
+  document.addEventListener('click', (e) => {
+    if (open && !dropdown?.contains(e.target as Node) && !toggle?.contains(e.target as Node)) {
+      closeDropdown();
+    }
+  });
+
+  // Close on Escape
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeDropdown(); });
+
+  // Scroll-aware header
+  const header = document.getElementById('site-header');
+  if (header) {
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 40) {
+        header.style.background = 'rgba(8,12,16,0.92)';
+        header.style.backdropFilter = 'blur(12px)';
+        header.style.borderBottom = '1px solid rgba(255,255,255,0.06)';
+      } else {
+        header.style.background = 'transparent';
+        header.style.backdropFilter = 'none';
+        header.style.borderBottom = 'none';
+      }
+    }, { passive: true });
+  }
+
+  // Active section highlight in desktop nav
+  const sections = ['about', 'projects', 'stack', 'contact'];
+  const navLinks = document.querySelectorAll<HTMLAnchorElement>('.nav-link');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          const active = link.getAttribute('href') === `#${entry.target.id}`;
+          link.style.color = active ? 'var(--color-accent)' : 'var(--color-dim)';
+        });
+      }
+    });
+  }, { threshold: 0.4 });
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) observer.observe(el);
+  });
+</script>

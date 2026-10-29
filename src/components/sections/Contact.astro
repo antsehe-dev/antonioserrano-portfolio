@@ -1,0 +1,230 @@
+---
+import { t } from '../../i18n/index';
+interface Props { lang: string; }
+const { lang } = Astro.props;
+const tr = t(lang);
+const titleWords = tr.contact.title.split(' ');
+---
+
+<section id="contact" class="px-6 max-w-5xl mx-auto">
+  <div class="flex items-center gap-4 mb-16">
+    <span class="font-mono text-xs tracking-widest" style="color:var(--color-accent);">04</span>
+    <div class="flex-1" style="height:1px;background:linear-gradient(90deg,rgba(139,159,255,0.4),var(--color-border));"></div>
+    <span class="font-mono text-xs tracking-widest uppercase" style="color:var(--color-dim);">{lang === 'en' ? 'Contact' : 'Contacto'}</span>
+  </div>
+
+  <h2 class="contact-title text-4xl md:text-7xl font-black mb-6" style="letter-spacing:-0.04em;color:var(--color-heading);text-shadow:0 0 80px rgba(139,159,255,0.3);" aria-label={tr.contact.title}>
+    {titleWords.map((word, wi, arr) => [
+      <span style="display:inline-block;white-space:nowrap;">
+        {word.split('').map((ch) => (
+          <span class="contact-char" style="display:inline-block;overflow:hidden;">
+            <span class="contact-char-inner" style="display:inline-block;">{ch}</span>
+          </span>
+        ))}
+      </span>,
+      wi < arr.length - 1 ? ' ' : ''
+    ])}
+  </h2>
+
+  <p class="contact-sub text-base md:text-lg mb-12 max-w-lg" style="color:var(--color-muted);opacity:0;">
+    {lang === 'en'
+      ? 'Open to new opportunities and interesting conversations.'
+      : 'Abierto a nuevas oportunidades y conversaciones interesantes.'}
+  </p>
+
+  <!-- Form -->
+  <form
+    id="contact-form"
+    class="contact-btn flex flex-col gap-6 max-w-xl mb-12"
+    style="opacity:0;"
+    novalidate
+  >
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <div class="contact-field">
+        <input
+          type="text"
+          name="name"
+          id="field-name"
+          placeholder={tr.contact.form.name}
+          required
+          autocomplete="name"
+          class="contact-input w-full"
+        />
+      </div>
+      <div class="contact-field">
+        <input
+          type="email"
+          name="email"
+          id="field-email"
+          placeholder={tr.contact.form.email}
+          required
+          autocomplete="email"
+          class="contact-input w-full"
+        />
+      </div>
+    </div>
+
+    <div class="contact-field">
+      <textarea
+        name="message"
+        id="field-message"
+        placeholder={tr.contact.form.message}
+        required
+        rows="5"
+        class="contact-input w-full resize-none"
+      ></textarea>
+    </div>
+
+    <!-- Status message -->
+    <p id="form-status" class="font-mono text-xs" style="color:#8b9fff;display:none;"></p>
+
+    <div>
+      <button
+        type="submit"
+        id="form-submit"
+        class="font-mono text-xs uppercase tracking-widest transition-colors duration-200"
+        style="color:var(--color-dim);"
+      >
+        <span id="submit-label">{tr.contact.form.send} →</span>
+      </button>
+    </div>
+  </form>
+
+  <!-- Social links -->
+  <div class="flex items-center gap-8">
+    <a
+      href="https://www.linkedin.com/in/antonio-serrano-herruzo-5a9435388/"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="contact-btn contact-link"
+      style="opacity:0;"
+    >
+      <span class="font-mono text-xs uppercase tracking-widest transition-colors duration-200" style="color:var(--color-dimmer);">LinkedIn ↗</span>
+    </a>
+    <a
+      href="https://github.com/antsehe-dev"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="contact-btn contact-link"
+      style="opacity:0;"
+    >
+      <span class="font-mono text-xs uppercase tracking-widest transition-colors duration-200" style="color:var(--color-dimmer);">GitHub ↗</span>
+    </a>
+  </div>
+</section>
+
+<style>
+  .contact-input {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    padding: 0.6rem 0;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .contact-input::placeholder {
+    color: var(--color-dimmer);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .contact-input:focus {
+    border-bottom-color: var(--color-accent);
+  }
+  .contact-input:focus::placeholder {
+    color: var(--color-dim);
+  }
+  #form-submit:hover {
+    color: var(--color-heading);
+  }
+  #form-submit:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+</style>
+
+<script>
+  import { gsap } from 'gsap';
+  import { ScrollTrigger } from 'gsap/ScrollTrigger';
+  import { getLangFromUrl } from '../../i18n/index';
+  import emailjs from '@emailjs/browser';
+  gsap.registerPlugin(ScrollTrigger);
+
+  const EMAILJS_SERVICE = 'service_5lrjjbr';
+  const EMAILJS_TEMPLATE = 'template_whsgiph';
+  const EMAILJS_KEY = 'E-Bg5B5vMrDoNDrj_';
+
+  emailjs.init(EMAILJS_KEY);
+
+  const lang = getLangFromUrl(new URL(window.location.href));
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!reduced) {
+    gsap.from('.contact-char-inner', {
+      y: '110%',
+      opacity: 0,
+      stagger: 0.04,
+      duration: 0.55,
+      ease: 'power3.out',
+      scrollTrigger: { trigger: '.contact-title', start: 'top 85%' },
+    });
+
+    gsap.set(['.contact-sub', '.contact-btn'], { opacity: 0, y: 20 });
+    gsap.to(['.contact-sub', '.contact-btn'], {
+      opacity: 1,
+      y: 0,
+      stagger: 0.12,
+      duration: 0.6,
+      ease: 'power3.out',
+      scrollTrigger: { trigger: '#contact', start: 'top 80%' },
+    });
+
+    document.querySelectorAll<HTMLElement>('.contact-link span').forEach((span) => {
+      span.parentElement?.addEventListener('mouseenter', () => { span.style.color = 'var(--color-text)'; });
+      span.parentElement?.addEventListener('mouseleave', () => { span.style.color = 'var(--color-dimmer)'; });
+    });
+  } else {
+    document.querySelectorAll<HTMLElement>('.contact-sub, .contact-btn').forEach((el) => {
+      el.style.opacity = '1';
+      el.style.transform = 'none';
+    });
+  }
+
+  const form = document.getElementById('contact-form') as HTMLFormElement | null;
+  const statusEl = document.getElementById('form-status') as HTMLParagraphElement | null;
+  const submitBtn = document.getElementById('form-submit') as HTMLButtonElement | null;
+  const submitLabel = document.getElementById('submit-label');
+
+  const successMsg = lang === 'en' ? 'Message sent. I\'ll get back to you soon.' : 'Mensaje enviado. Te respondo pronto.';
+  const errorMsg = lang === 'en' ? 'Failed to send. Please try again.' : 'Error al enviar. Inténtalo de nuevo.';
+  const sendingMsg = lang === 'en' ? 'Sending...' : 'Enviando...';
+  const sendLabel = lang === 'en' ? 'Send →' : 'Enviar →';
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!submitBtn || !statusEl || !submitLabel) return;
+
+    submitBtn.disabled = true;
+    submitLabel.textContent = sendingMsg;
+    statusEl.style.display = 'none';
+
+    try {
+      await emailjs.sendForm(EMAILJS_SERVICE, EMAILJS_TEMPLATE, form);
+      statusEl.textContent = successMsg;
+      statusEl.style.color = 'var(--color-accent)';
+      statusEl.style.display = 'block';
+      form.reset();
+    } catch {
+      statusEl.textContent = errorMsg;
+      statusEl.style.color = '#ef4444';
+      statusEl.style.display = 'block';
+    } finally {
+      submitLabel.textContent = sendLabel;
+      submitBtn.disabled = false;
+    }
+  });
+</script>

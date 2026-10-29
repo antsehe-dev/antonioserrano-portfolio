@@ -1,0 +1,29 @@
+---
+import Base from '../../layouts/Base.astro';
+import Hero from '../../components/hero/Hero.astro';
+import About from '../../components/sections/About.astro';
+import Projects from '../../components/sections/Projects.astro';
+import Stack from '../../components/sections/Stack.astro';
+import Contact from '../../components/sections/Contact.astro';
+import AITerminal from '../../components/ui/AITerminal.astro';
+import LoadingScreen from '../../components/ui/LoadingScreen.astro';
+---
+
+<Base lang="en">
+  <LoadingScreen />
+  <Hero lang="en" />
+  <About lang="en" />
+  <Projects lang="en" />
+  <Stack lang="en" />
+  <Contact lang="en" />
+  <AITerminal />
+</Base>
+
+<script>
+  import Lenis from 'lenis';
+  if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    const lenis = new Lenis();
+    function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
+    requestAnimationFrame(raf);
+  }
+</script>

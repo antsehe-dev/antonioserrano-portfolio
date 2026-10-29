@@ -1,0 +1,89 @@
+---
+// Easter egg: floating AI terminal
+---
+
+<div id="ai-terminal-trigger" class="fixed bottom-6 right-6 z-50">
+  <button
+    id="terminal-toggle"
+    class="w-12 h-12 rounded-full glass border border-[var(--color-border)] hover:border-[var(--color-accent)] flex items-center justify-center text-[var(--color-muted)] hover:text-[var(--color-accent)] transition-all font-mono text-lg"
+    aria-label="Open AI terminal"
+    aria-expanded="false"
+  >
+    &gt;_
+  </button>
+
+  <div
+    id="terminal-panel"
+    class="absolute bottom-16 right-0 w-80 glass rounded-xl border border-[var(--color-border)] p-4 font-mono text-xs hidden"
+    role="complementary"
+    aria-label="AI Terminal"
+  >
+    <div class="flex items-center gap-2 mb-3 border-b border-[var(--color-border)] pb-2">
+      <span class="w-2.5 h-2.5 rounded-full bg-red-500/70"></span>
+      <span class="w-2.5 h-2.5 rounded-full bg-yellow-500/70"></span>
+      <span class="w-2.5 h-2.5 rounded-full bg-green-500/70"></span>
+      <span class="text-[var(--color-muted)] ml-2 text-xs">portfolio-ai — bash</span>
+    </div>
+    <div id="terminal-output" class="space-y-1 text-[var(--color-muted)]"></div>
+  </div>
+</div>
+
+<script>
+  const toggle = document.getElementById('terminal-toggle');
+  const panel  = document.getElementById('terminal-panel');
+  const output = document.getElementById('terminal-output');
+
+  if (!toggle || !panel || !output) throw new Error('terminal els missing');
+
+  // Lines are injected server-side via data attributes to keep i18n out of client JS
+  // shortcut: static English lines here, upgrade when i18n needed in client bundle
+  const prompt = '$ generate bio --subject=Antonio --format=human';
+  const lines = [
+    'Loading profile...',
+    'Analyzing behavioral patterns...',
+    'AI Engineer. Backend lover. Never gives up.',
+    'Location: Córdoba, Spain.',
+    'Status: building things that matter.',
+    'Done.',
+  ];
+
+  let played = false;
+
+  function playTerminal() {
+    if (played) return;
+    played = true;
+    output.innerHTML = '';
+
+    const promptEl = document.createElement('p');
+    promptEl.className = 'text-[var(--color-accent)]';
+    promptEl.textContent = prompt;
+    output.appendChild(promptEl);
+
+    lines.forEach((line, i) => {
+      setTimeout(() => {
+        const el = document.createElement('p');
+        el.className = i === lines.length - 1 ? 'text-green-400' : '';
+        el.textContent = `> ${line}`;
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          output.appendChild(el);
+        } else {
+          el.textContent = '';
+          output.appendChild(el);
+          let j = 0;
+          const full = `> ${line}`;
+          const iv = setInterval(() => {
+            el.textContent = full.slice(0, j++);
+            if (j > full.length) clearInterval(iv);
+          }, 25);
+        }
+      }, 400 + i * 600);
+    });
+  }
+
+  toggle.addEventListener('click', () => {
+    const open = panel.classList.contains('hidden');
+    panel.classList.toggle('hidden', !open);
+    toggle.setAttribute('aria-expanded', String(open));
+    if (open) playTerminal();
+  });
+</script>

@@ -1,0 +1,35 @@
+---
+import { t } from '../../i18n/index';
+import { projects } from '../../data/projects';
+import ProjectsBento from './ProjectsBento';
+
+interface Props { lang: string; }
+const { lang } = Astro.props;
+const tr = t(lang);
+
+const labels = {
+  internal_label: tr.projects.internal_label,
+  view_repo: tr.projects.view_repo,
+  modal_problem: lang === 'en' ? 'Problem it solves' : tr.projects.problem_label,
+  modal_role: lang === 'en' ? 'My role' : tr.projects.role_label,
+};
+---
+
+<section id="projects" class="px-6 max-w-6xl mx-auto">
+  <div class="flex items-center gap-4 mb-16">
+    <span class="font-mono text-xs tracking-widest" style="color:var(--color-accent);">02</span>
+    <div class="flex-1" style="height:1px;background:linear-gradient(90deg,rgba(139,159,255,0.4),var(--color-border));"></div>
+    <span class="font-mono text-xs tracking-widest uppercase" style="color:var(--color-dim);">{lang === 'en' ? 'Work' : 'Proyectos'}</span>
+  </div>
+
+  <h2 class="text-5xl md:text-7xl font-black mb-12 leading-none" style="letter-spacing:-0.04em;background:linear-gradient(to right,var(--color-accent) 0%,var(--color-heading) 55%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">
+    {tr.projects.title}
+  </h2>
+
+  <ProjectsBento
+    projects={projects}
+    lang={lang}
+    labels={labels}
+    client:visible
+  />
+</section>
